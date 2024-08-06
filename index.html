@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container">
+        <header class="custom-header d-flex justify-content-between align-items-center py-3">
+            <div class="logo">
+                <img src="images/logo.png" alt="Logo">
+                <span class="lab-name">Revista do Laboratório de Análise do Comportamento e Neurociências</span>
+            </div>    
+        </header>
+        <div class="content">
+            <img src="images/Captura de tela 2024-02-06 142253.png" alt="Descrição da imagem" class="img-fluid">
+            <div class="upload-section">
+                <h2>Upload de Documentos</h2>
+                <form id="uploadForm" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="fileInput" class="custom-file-upload">
+                            <span>Selecione um arquivo (PDF apenas)</span>
+                            <input type="file" id="fileInput" name="pdfFile" accept="application/pdf">
+                        </label>
+                        <button type="button" id="removeFileButton" class="btn btn-danger btn-sm mt-2" style="display: none;">X</button>
+                        <div id="fileDisplay" class="mt-2"></div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Upload</button>
+                </form>
+            </div>
+
+            <div class="download-section mt-5">
+                <h2>Documentos disponíveis para download</h2>
+                <ul class="download-list" id="downloadList"></ul>
+            </div>
+        </div>
+        <footer class="footer">
+            <div class="row">
+                <div class="col-md-12 text-center">
+                    <img src="images/logo-unesp.png" alt="Logo" class="footer-logo">
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12 text-center">
+                    <p>Av. Eng. Luiz Edmundo C. Coube 14-01 - Núcleo Habitacional Presidente Geisel - Bauru - SP/SP - CEP 17033-360</p>
+                    <p>Telefone: (14) 3103-6000 - Fax: (14) 3103-6010 - Pabx: (14) 3103-6000</p>        
+                </div>
+            </div>
+        </footer>
+    </div>
+    <script type="module" src="main.js"></script>
+</body>
+</html>
+
+
+
+
