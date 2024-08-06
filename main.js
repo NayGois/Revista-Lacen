@@ -43,11 +43,14 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // Sanitize the file name
+        const sanitizedFileName = file.name.replace(/[^a-z0-9\.\_\-]/gi, '_');
+
         try {
-            console.log('Iniciando o upload do arquivo:', file.name);
+            console.log('Iniciando o upload do arquivo:', sanitizedFileName);
             const { data, error } = await supabase.storage
                 .from('documents') // Nome do bucket
-                .upload(file.name, file);
+                .upload(sanitizedFileName, file);
 
             if (error) {
                 throw error;
@@ -75,7 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (error) throw error;
 
             const downloadList = document.getElementById('downloadList');
-            downloadList.innerHTML = ''; // Limpa lista existente
+            downloadList.innerHTML = ''; // Limpar lista existente
 
             for (const file of data) {
                 const fileName = file.name; // Nome do arquivo
