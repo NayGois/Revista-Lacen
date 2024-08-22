@@ -1,56 +1,127 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
 const supabaseUrl = 'https://qbumckppwmyxksskicws.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFidW1ja3Bwd215eGtzc2tpY3dzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjI0NTYwNTIsImV4cCI6MjAzODAzMjA1Mn0.pbuvB6XYT7zJKj-Iwn8hMYEenzhEUJqyno7ZUW0ewak';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFidW1ja3Bwd215eGtzc2tpY3dzIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTcyMjQ1NjA1MiwiZXhwIjoyMDM4MDMyMDUyfQ.c3o4zW5W1D5-IyuJaJP5jDAOrMsSaHQuVCZaHKR6x_w';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 document.addEventListener('DOMContentLoaded', () => {
-    const uploadForm = document.getElementById('uploadForm');
-    const fileInput = document.getElementById('fileInput');
-    const fileDisplay = document.getElementById('fileDisplay');
-    const removeButton = document.getElementById('removeFileButton');
+    const contentSection = document.getElementById('contentSection');
+    const loginForm = document.getElementById('loginForm');
+    const registerForm = document.getElementById('registerForm');
+    const loginButton = document.getElementById('loginButton');
+    const registerButton = document.getElementById('registerButton');
+    const logoutButton = document.getElementById('logoutButton');
 
-    fileInput.addEventListener('change', () => {
-        const file = fileInput.files[0];
-        if (file) {
-            if (file.type === 'application/pdf') {
-                fileDisplay.textContent = file.name;
-                removeButton.style.display = 'inline-block';
-            } else {
-                alert('Por favor, selecione um arquivo PDF.');
-                fileInput.value = '';
-                fileDisplay.textContent = '';
-                removeButton.style.display = 'none';
-            }
+    // Verifica se há um token de acesso na URL e redireciona para a página inicial
+    const hashParams = new URLSearchParams(window.location.hash.slice(1));
+    if (hashParams.has('access_token')) {
+        window.location.href = 'http://127.0.0.1:5500/';
+    } else if (hashParams.has('error')) {
+        alert('Erro: ' + hashParams.get('error_description'));
+        window.location.href = 'http://127.0.0.1:5500/';
+    }
+
+    logoutButton.addEventListener('click', async () => {
+        await supabase.auth.signOut();
+        contentSection.style.display = 'none';
+        loginButton.style.display = 'inline-block';
+        registerButton.style.display = 'inline-block';
+        logoutButton.style.display = 'none';
+    });
+
+    // Registro
+    registerForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('registerEmail').value;
+        const password = document.getElementById('registerPassword').value;
+
+        const { data, error } = await supabase.auth.signUp({
+            email,
+            password
+        });
+
+        if (error) {
+            alert('Erro ao registrar: ' + error.message);
         } else {
-            fileDisplay.textContent = '';
-            removeButton.style.display = 'none';
+            alert('Registro bem-sucedido! Por favor, verifique seu email para confirmar sua conta.');
+            const modal = bootstrap.Modal.getInstance(document.getElementById('registerModal'));
+            modal.hide(); // Oculta o modal após o registro
         }
     });
 
-    removeButton.addEventListener('click', () => {
+    // Login
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('loginEmail').value;
+        const password = document.getElementById('loginPassword').value;
+
+        const { data, error } = await supabase.auth.signInWithPassword({
+            email,
+            password
+        });
+
+        if (error) {
+            alert('Erro ao fazer login: ' + error.message);
+        } else {
+            const modal = bootstrap.Modal.getInstance(document.getElementById('loginModal'));
+            modal.hide(); // Oculta o modal após o login
+            contentSection.style.display = 'block';
+            loginButton.style.display = 'none';
+            registerButton.style.display = 'none';
+            logoutButton.style.display = 'inline-block';
+            updateDownloadList();
+        }
+    });
+
+    const uploadForm = document.getElementById('uploadForm');
+    const fileInput = document.getElementById('fileInput');
+    const fileButton = document.getElementById('fileButton');
+    const fileDisplay = document.getElementById('fileDisplay');
+    const removeFileButton = document.getElementById('removeFileButton');
+    const downloadList = document.getElementById('downloadList');
+
+    let selectedFile = null;
+
+    fileButton.addEventListener('click', () => {
+        fileInput.click();
+    });
+
+    fileInput.addEventListener('change', (e) => {
+        selectedFile = e.target.files[0];
+        if (selectedFile) {
+            fileDisplay.textContent = `Arquivo selecionado: ${selectedFile.name}`;
+            fileButton.textContent = 'Trocar arquivo';
+            removeFileButton.style.display = 'inline-block';
+        } else {
+            fileDisplay.textContent = '';
+            fileButton.textContent = 'Escolha arquivo';
+            removeFileButton.style.display = 'none';
+        }
+    });
+
+    removeFileButton.addEventListener('click', () => {
         fileInput.value = '';
         fileDisplay.textContent = '';
-        removeButton.style.display = 'none';
+        selectedFile = null;
+        fileButton.textContent = 'Escolha arquivo';
+        removeFileButton.style.display = 'none';
     });
 
     uploadForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        const file = fileInput.files[0];
-
-        if (!file) {
+        if (!selectedFile) {
             alert('Por favor, selecione um arquivo para enviar.');
             return;
         }
 
-        // Sanitize the file name
-        const sanitizedFileName = file.name.replace(/[^a-z0-9\.\_\-]/gi, '_');
+        const sanitizedFileName = selectedFile.name.replace(/[^a-z0-9\.\_\-]/gi, '_');
 
         try {
             console.log('Iniciando o upload do arquivo:', sanitizedFileName);
             const { data, error } = await supabase.storage
-                .from('documents') // Nome do bucket
-                .upload(sanitizedFileName, file);
+                .from('documents')
+                .upload(sanitizedFileName, selectedFile);
 
             if (error) {
                 throw error;
@@ -59,16 +130,16 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('Arquivo enviado com sucesso:', data);
 
             alert('Arquivo enviado com sucesso!');
-            
-            // Limpar o input de arquivo e esconder nome e botão de remoção
             fileInput.value = '';
             fileDisplay.textContent = '';
-            removeButton.style.display = 'none';
+            fileButton.textContent = 'Escolha arquivo';
+            selectedFile = null;
+            removeFileButton.style.display = 'none';
 
-            updateDownloadList(); // Atualiza a lista de downloads
+            updateDownloadList();
         } catch (error) {
             console.error('Erro ao fazer upload:', error);
-            alert('Erro ao enviar arquivo.');
+            
         }
     });
 
@@ -77,21 +148,20 @@ document.addEventListener('DOMContentLoaded', () => {
             const { data, error } = await supabase.storage.from('documents').list();
             if (error) throw error;
 
-            const downloadList = document.getElementById('downloadList');
-            downloadList.innerHTML = ''; // Limpar lista existente
+            downloadList.innerHTML = '';
 
             for (const file of data) {
-                const fileName = file.name; // Nome do arquivo
+                const fileName = file.name;
                 const { data: publicUrlData, error: urlError } = supabase.storage.from('documents').getPublicUrl(fileName);
                 if (urlError) throw urlError;
 
                 const publicURL = publicUrlData.publicUrl;
 
-                console.log(`File: ${fileName}, Public URL: ${publicURL}`); // Adicionando log para depuração
+                console.log(`Arquivo: ${fileName}, URL pública: ${publicURL}`);
 
                 if (!publicURL) {
-                    console.error(`Public URL is not defined for file: ${fileName}`);
-                    continue; // Pula para o próximo arquivo
+                    console.error(`URL pública não está definida para o arquivo: ${fileName}`);
+                    continue;
                 }
 
                 const listItem = document.createElement('li');
@@ -107,6 +177,5 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Atualiza a lista de downloads na inicialização
     updateDownloadList();
 });
